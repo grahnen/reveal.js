@@ -189,21 +189,12 @@ export default class AutoAnimate {
 		// the 'to' element so that it matches the position and size
 		// of the 'from' element
 		if(from.tagName === "path") {
+            // Paths don't have translation or scale, so we only animate the "d" attribute.
             let path = elementOptions.path !== false && ( fromProps.d !== toProps.d);
             if(path) {
-                console.log(fromProps.d, toProps.d);
                 fromProps.styles['d'] = `path("${fromProps.d}")`
 				toProps.styles['d'] = `path("${toProps.d}")`;
             }
-
-			// if (translate) transform.push(`translate(${delta.x}px, ${delta.y}px)`);
-			// if (scale) transform.push(`scale(${delta.scaleX}, ${delta.scaleY})`);
-
-			// fromProps.styles['transform'] = transform.join(' ');
-			// fromProps.styles['transform-origin'] = 'top left';
-
-			// toProps.styles['transform'] = 'none';
-
         }
 		else if(elementOptions.translate !== false || elementOptions.scale !== false) {
 
@@ -211,6 +202,8 @@ export default class AutoAnimate {
             var factor = 1.0;
 
             if(from.parentElement.tagName == "svg") {
+                // Without this, svg animations jumps halfway for me.
+				// Why? I don't know. At least this is a workaround that works.
                 factor = 2.0;
             }
 			let delta = {
@@ -362,6 +355,7 @@ export default class AutoAnimate {
 
 
         if(element.tagName === "path") {
+            // We can auto-animate paths using their "d" attribute
             properties.d = element.attributes.d.value;
         }
 		// Position and size
