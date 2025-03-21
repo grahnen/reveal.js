@@ -38,7 +38,7 @@ export default class AutoAnimate {
 		// 3. data-auto-animate-restart isn't set on the physically latter
 		//    slide (independent of slide direction).
 		if( fromSlide && toSlide && fromSlide.hasAttribute( 'data-auto-animate' ) && toSlide.hasAttribute( 'data-auto-animate' )
-				&& fromSlide.getAttribute( 'data-auto-animate-id' ) === toSlide.getAttribute( 'data-auto-animate-id' ) 
+				&& fromSlide.getAttribute( 'data-auto-animate-id' ) === toSlide.getAttribute( 'data-auto-animate-id' )
 				&& !( toSlideIndex > fromSlideIndex ? toSlide : fromSlide ).hasAttribute( 'data-auto-animate-restart' ) ) {
 
 			// Create a new auto-animate sheet
@@ -188,24 +188,21 @@ export default class AutoAnimate {
 		// If translation and/or scaling are enabled, css transform
 		// the 'to' element so that it matches the position and size
 		// of the 'from' element
-		if(from.tagName === "path") {
+		if(from.parentElement.tagName === "svg") {
             // Paths don't have translation or scale, so we only animate the "d" attribute.
-            let path = elementOptions.path !== false && ( fromProps.d !== toProps.d);
-            if(path) {
-                fromProps.styles['d'] = `path("${fromProps.d}")`
-				toProps.styles['d'] = `path("${toProps.d}")`;
+            //let path = elementOptions.path !== false && ( fromProps.d !== toProps.d);
+            //if(path) {
+            //     fromProps.styles['d'] = `path("${fromProps.d}")`
+			// 	toProps.styles['d'] = `path("${toProps.d}")`;
+            // }
+            for (var q in fromProps) {
+                fromProps.styles[q] = fromProps[q];
+                toProps.styles[q] = toProps[q];
             }
         }
 		else if(elementOptions.translate !== false || elementOptions.scale !== false) {
-
 			let presentationScale = this.Reveal.getScale();
-            var factor = 1.0;
-
-            if(from.parentElement.tagName == "svg") {
-                // Without this, svg animations jumps halfway for me.
-				// Why? I don't know. At least this is a workaround that works.
-                factor = 2.0;
-            }
+            let factor = 1.0;
 			let delta = {
 				x: ( fromProps.x - toProps.x ) / presentationScale,
 				y: ( fromProps.y - toProps.y ) / presentationScale,
@@ -213,15 +210,14 @@ export default class AutoAnimate {
 				scaleY: fromProps.height / toProps.height
 			};
 
-
 			// Limit decimal points to avoid 0.0001px blur and stutter
 			delta.x = factor * Math.round( delta.x * 1000 ) / 1000;
 			delta.y = factor * Math.round( delta.y * 1000 ) / 1000;
 			delta.scaleX = Math.round( delta.scaleX * 1000 ) / 1000;
 			delta.scaleX = Math.round( delta.scaleX * 1000 ) / 1000;
 
-			let translate = elementOptions.translate !== false && ( delta.x !== 0 || delta.y !== 0 ),
-				scale = elementOptions.scale !== false && ( delta.scaleX !== 0 || delta.scaleY !== 0 );
+			let translate = elementOptions.translate !== false && ( delta.x !== 0 || delta.y !== 0),
+				scale = elementOptions.scale !== false && ( delta.scaleX !== 0 || delta.scaleY !== 0);
 
 			// No need to transform if nothing's changed
 			if( translate || scale ) {
@@ -229,7 +225,9 @@ export default class AutoAnimate {
 				let transform = [];
 
 				if( translate ) transform.push( `translate(${delta.x}px, ${delta.y}px)` );
+                //if( translate ) transform.push( `translate(${delta.cx}px, ${delta.cy}px)` );
 				if( scale ) transform.push( `scale(${delta.scaleX}, ${delta.scaleY})` );
+                //if( scale ) transform.push( `transition(${delta.rx}, ${delta.ry})` );
 
 				fromProps.styles['transform'] = transform.join( ' ' );
 				fromProps.styles['transform-origin'] = 'top left';
@@ -278,7 +276,6 @@ export default class AutoAnimate {
 			toProps.styles['transition-property'] = toStyleProperties.join( ', ' );
 			toProps.styles['will-change'] = toStyleProperties.join( ', ' );
 
-			
 			// Build up our custom CSS. We need to override inline styles
 			// so we need to make our styles vErY IMPORTANT!1!!
 			let fromCSS = Object.keys( fromProps.styles ).map( propertyName => {
@@ -353,11 +350,21 @@ export default class AutoAnimate {
 
 		let properties = { styles: [] };
 
+        if(element.parentElement.tagName === "svg") {
+			for ( var attr in element.attributes) {
+                // SVGs can animate *any* of their components
+				const keywords = new Set(["data-id", "styles", "data-auto-animate-target"]);
+                if ( !keywords.has(element.attributes[attr].name) ) {
+                    properties[element.attributes[attr].name] = element.attributes[attr].value;
+                }
+            }
 
-        if(element.tagName === "path") {
-            // We can auto-animate paths using their "d" attribute
-            properties.d = element.attributes.d.value;
+
         }
+        // if(element.tagName === "path") {
+        //     // We can auto-animate paths using their "d" attribute
+        //     properties.d = element.attributes.d.value;
+        // }
 		// Position and size
 		if( elementOptions.translate !== false || elementOptions.scale !== false ) {
 			let bounds;
@@ -383,7 +390,6 @@ export default class AutoAnimate {
 					};
 				}
 			}
-
 			properties.x = bounds.x;
 			properties.y = bounds.y;
 			properties.width = bounds.width;
