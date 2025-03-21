@@ -196,8 +196,13 @@ export default class AutoAnimate {
 			// 	toProps.styles['d'] = `path("${toProps.d}")`;
             // }
             for (var q in fromProps) {
-                fromProps.styles[q] = fromProps[q];
-                toProps.styles[q] = toProps[q];
+                if(q === "d") {
+					fromProps.styles['d'] = `path("${fromProps.d}")`;
+                    toProps.styles['d'] = `path("${toProps.d}")`;
+                } else {
+                    fromProps.styles[q] = fromProps[q];
+                    toProps.styles[q] = toProps[q];
+                }
             }
         }
 		else if(elementOptions.translate !== false || elementOptions.scale !== false) {
